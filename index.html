@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>【CROSS SENSE】カード検索サイト</title>
+
+    <style>
+        body {
+            font-family: sans-serif;
+            font-size: 18px;
+            margin: 30px;
+            background-color: #f5f5f5;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 36px;
+        }
+
+        #searchBox {
+            font-size: 18px;
+            padding: 8px;
+            width: 300px;
+        }
+
+        select {
+            font-size: 18px;
+            padding: 8px;
+            margin-left: 5px;
+        }
+
+        #cardList {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        #cardList img {
+            width: 250px;
+            display: block;
+        }
+
+        .search-area {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .search-row,
+        .filter-row {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .search-row input {
+            font-size: 20px;
+            padding: 10px;
+                    width: 750px;
+    box-sizing: border-box;
+        }
+
+        .filter-row select {
+            font-size: 18px;
+            padding: 10px;
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <h1>【CROSS SENSE】カード検索サイト</h1>
+
+
+    <!-- カード種類 -->
+<div class="search-area">
+
+    <!-- 上段：文字検索 -->
+    <div class="search-row">
+
+        <input
+            type="text"
+            id="searchBox"
+            placeholder="カード名を入力"
+            oninput="searchCards()"
+        >
+
+        <input
+            type="text"
+            id="effectSearchBox"
+            placeholder="カード効果を入力"
+            oninput="searchCards()"
+        >
+
+    </div>
+
+
+    <!-- 下段：条件検索 -->
+    <div class="filter-row">
+
+        <select id="typeFilter" onchange="searchCards()">
+            <option value="all">すべてのカード</option>
+            <option value="バトル">バトルカード</option>
+            <option value="ウェポン">ウェポンカード</option>
+        </select>
+
+        <select id="battleTypeFilter" onchange="searchCards()">
+            <option value="all">すべてのバトルタイプ</option>
+            <option value="B">バトルマスター</option>
+            <option value="P">パラディン</option>
+            <option value="W">ウィザード</option>
+            <option value="A">アサシン</option>
+            <option value="M">マジシャン</option>
+        </select>
+
+        <select id="attributeFilter" onchange="searchCards()">
+            <option value="all">すべての属性</option>
+            <option value="陸">陸</option>
+            <option value="海">海</option>
+            <option value="風">風</option>
+        </select>
+
+    </div>
+
+</div>
+
+
+    <hr>
+
+    <!-- カードを表示する場所 -->
+    <div id="cardList"></div>
+
+
+    <script>
+
+        // バトルタイプの正式名称
+        const battleTypeNames = {
+            B: "バトルマスター",
+            P: "パラディン",
+            W: "ウィザード",
+            A: "アサシン",
+            M: "マジシャン"
+        };
+
+
+        // カードデータ
+        const cards = [
+
+            {
+                name: "グリネコ",
+                type: "バトル",
+                battleType: "M",
+                attribute: "陸",
+                battleSense: 500,
+                effect: "このカードのバトルセンスは自分バトルセンスから相手バトルセンスを2倍にした数を引いた数だけ変化する。",
+
+                // ← グリネコの画像
+                image: "グリネコ__18358609.jpg"
+            },
+
+
+            {
+                name: "未来設計図",
+                type: "ウェポン",
+                attribute: "",
+                effect: "このカードをオープンした時、このラウンドに敗北し、以下の効果を得る。次に出すバトルカードのバトルセンスは+1000上昇する。",
+
+                // ← ここに画像ファイル名を入れる
+                image: "未来設計図__18358602.jpg"
+            },
+
+
+            {
+                name: "司令塔",
+                type: "ウェポン",
+                battleType: "",
+                attribute: "",
+                effect: "このカードはオープン前にバトルカードとしてセットできる。このカードがオープンされた時、セットしたUカードの中から好きなカード1枚をバトルセンス500のバトルカードとしてかのカードと入れ替えセットする。この時、Uカードの効果はバトルカードの効果として使用できる。このカードが撃破された時、そのラウンドに敗北する",
+
+                // ← ここに画像ファイル名を入れる
+                image: "司令塔__18358595.jpg"
+            },
+
+            {
+                name: "O・S ギザード",
+                type: "バトル",
+                battleType: "W",
+                attribute: "風",
+                battleSense: 900,
+                effect: "このカードの効果は、相手のセットされたUカードが表向きになった時に発動できる。他の裏向きにセットされたUカードを1枚選んで墓地に送る。",
+
+                // ← ここに画像ファイル名を入れる
+                image: "O・S ギザード__18358580.jpg"
+            },
+
+            {
+                name: "アゲてけよテンション",
+                type: "ウェポン",
+                attribute: "",
+                effect: "このカードの効果はこのカードの使用者がテンションをアゲた時に発動できる。互いのバトルカードのバトルセンスを+500させる。",
+
+                // ← ここに画像ファイル名を入れる
+                image: "アゲてけよテンション__18358587.jpg"
+            },
+
+            {
+                name: "トンガリ隊の狂戦士",
+                type: "バトル",
+                battleType: "B",
+                attribute: "風",
+                battleSense: 500,
+                effect: "このカードがオープンした時、Uデッキを上から任意の数だけUカードを引き、墓地に送る。その後、バトルセンスを墓地に送ったUカードの数×500上昇する。",
+
+                // ← 画像
+                image: "トンガリ隊の狂戦士__18358582.jpg"
+            },
+
+            {
+                name: "トンガリ隊の自爆兵",
+                type: "バトル",
+                battleType: "B",
+                attribute: "陸",
+                battleSense: 0,
+                effect: "このカードがオープン・撃破された時、以下の効果から選んで発動できる。①：このカードを墓地に送り、相手バトルカードを墓地に送る。②：このカードを墓地に送り、相手手札またはセットされたUカード1枚墓地に送る。",
+
+                // ← 画像
+                image: "トンガリ隊の自爆兵__18358614.jpg"
+            },
+
+            {
+                name: "フェアなグリネコ",
+                type: "バトル",
+                battleType: "M",
+                attribute: "陸",
+                battleSense: 500,
+                effect: "このカードがオープンされた時、相手のセットしたUカードを自分のセットしたUカードの枚数と同じ枚数にさせる。この時、相手は数を合わせる為にUカードを墓地に送るかUデッキからカードを引きセットしなければならない。",
+
+                // ← 画像
+                image: "フェアなグリネコ__18358593.jpg"
+            },
+
+            {
+                name: "フンカザン",
+                type: "バトル",
+                battleType: "B",
+                attribute: "陸",
+                battleSense: 800,
+                effect: "相手のセットされたカードの中から、ドロー系カードを効果無効のまま破壊する。このカードのバトルセンスは、破壊したカードの枚数×500上昇する。",
+
+                // ← 画像
+                image: "フンカザン__18358583.jpg"
+            },
+
+            {
+                name: "まずは握手から...",
+                type: "ウェポン",
+                battleType: "",
+                attribute: "",
+                effect: "このカード発動時の自分の手札のUカードと相手の手札のUカードが同じ枚数になるようにUデッキからカードを引き、手札からカードを捨てる。",
+
+                // ← 画像
+                image: "まずは握手から...__18358596.jpg"
+            },
+
+            {
+                name: "絢爛たるグリネコ",
+                type: "バトル",
+                battleType: "M",
+                attribute: "陸",
+                battleSense: 500,
+                effect: "このカードのバトルセンスが3回以上変動した時、バトルセンスを2倍にする。",
+
+                // ← 画像
+                image: "絢爛たるグリネコ__18358599.jpg"
+            },
+
+            {
+                name: "逆境",
+                type: "ウェポン",
+                battleType: "",
+                attribute: "",
+                effect: "自分が1ラウンドも取れず、相手に2ラウンド制されている時に手札から発動できる。セットされているUカードの効果を2倍にする",
+
+                // ← 画像
+                image: "逆境__18358617.jpg"
+            },
+
+            {
+                name: "愚考するグリネコ",
+                type: "バトル",
+                battleType: "M",
+                attribute: "陸",
+                battleSense: 1000,
+                effect: "このカードがオープンされた時、自分がセットしたUカードの枚数分、相手にUデッキからカードを引かせる。",
+
+                // ← 画像
+                image: "愚考するグリネコ__18358598.jpg"
+            },
+
+            {
+                name: "愚直な介入",
+                type: "ウェポン",
+                battleType: "",
+                attribute: "",
+                effect: "相手のセットされたすべてのUカードと相手の手札のUカードを入れ替えさせる。",
+
+                // ← 画像
+                image: "愚直な介入__18358606.jpg"
+            },
+
+            {
+                name: "血が沸る",
+                type: "ウェポン",
+                battleType: "",
+                attribute: "",
+                effect: "相手の裏側でセットされたすUカードと相手の手札の手札1枚を墓地に送る。",
+
+                // ← 画像
+                image: "血が沸る__18358615.jpg"
+            },
+
+            {
+                name: "札勘定グリネコ",
+                type: "バトル",
+                battleType: "M",
+                attribute: "陸",
+                battleSense: 800,
+                effect: "このカードのバトルセンスは自分と相手のセットされたUカードの合計数×200上昇する。",
+
+                // ← 画像
+                image: "札勘定グリネコ__18358592.jpg"
+            },
+
+            {
+                name: "衆愚のグリネコ",
+                type: "バトル",
+                battleType: "M",
+                attribute: "陸",
+                battleSense: 1000,
+                effect: "自分のセットしたUカードと手札にあるUカードが合わせて5枚以上ある場合、すべてのUカードの効果が発動され、自分のバトルセンスも800上がる。",
+
+                // ← 画像
+                image: "衆愚のグリネコ__18358581.jpg"
+            },
+
+            {
+                name: "掌返し",
+                type: "ウェポン",
+                battleType: "",
+                attribute: "",
+                effect: "自分のオープンしたUカードをもう一度裏側にしてセットする。",
+
+                // ← 画像
+                image: "掌返し__18358584.jpg"
+            },
+
+            {
+                name: "神出鬼没",
+                type: "ウェポン",
+                battleType: "",
+                attribute: "",
+                effect: "相手がUデッキからUカードを手札に加えた時に発動できる。自分Uデッキから好きなUカードを1枚選んで手札に加えるかセットする。",
+
+                // ← 画像
+                image: "神出鬼没__18358585.jpg"
+            },
+
+            {
+                name: "切り札",
+                type: "ウェポン",
+                battleType: "",
+                attribute: "",
+                effect: "自分のセットした。Uカードがこのカードだけの時、発動できる。自分バトルカードのバトルセンスを+700する。",
+
+                // ← 画像
+                image: "切り札__18358616.jpg"
+            },
+
+            {
+                name: "装着式砲台",
+                type: "ウェポン",
+                battleType: "",
+                attribute: "",
+                effect: "自分がカードの効果を発動させた時に手札から発動できる。その効果にバトルセンスを+500上昇させる効果を追加する。",
+
+                // ← 画像
+                image: "装着式砲台__18358610.jpg"
+            },
+
+            {
+                name: "地獄皮膚",
+                type: "ウェポン",
+                battleType: "",
+                attribute: "",
+                effect: "バトルセンスの数値が変動した時に手札から発動できる。Uデッキを1枚引く。",
+
+                // ← 画像
+                image: "地獄皮膚__18358603.jpg"
+            },
+
+            {
+                name: "適応するグリネコ",
+                type: "バトル",
+                battleType: "M",
+                attribute: "陸",
+                battleSense: 1000,
+                effect: "この効果は手札のUカードを1枚墓地に送って発動できる。このカードの属性を好きな属性に変更する。手札に戻ると属性は「陸」になる。",
+
+                // ← 画像
+                image: "適応するグリネコ__18358600.jpg"
+            },
+
+            {
+                name: "天邪鬼",
+                type: "ウェポン",
+                battleType: "",
+                attribute: "",
+                effect: "相手バトルカードのバトルセンスが変動した時に発動できる。その変動した数値分、自分バトルカードのバトルセンスを減少させる。",
+
+                // ← 画像
+                image: "天邪鬼__18358586.jpg"
+            },
+
+            {
+                name: "肉を切らせて骨を断たせろ",
+                type: "ウェポン",
+                battleType: "",
+                attribute: "",
+                effect: "このカードの効果は、自分バトルカードのバトルセンスを500減少させて発動できる。Uデッキを1枚引く。",
+
+                // ← 画像
+                image: "肉を切らせて骨を断たせろ__18358589.jpg"
+            },
+
+            {
+                name: "貧者の篝火草",
+                type: "ウェポン",
+                battleType: "",
+                attribute: "",
+                effect: "このカードは手札からUカードを1枚墓地に送り手札から発動できる。自分・バトルカードを墓地に送る。",
+
+                // ← 画像
+                image: "貧者の篝火草__18358613.jpg"
+            },
+
+            {
+                name: "腐敗した戦士",
+                type: "ウェポン",
+                battleType: "",
+                attribute: "",
+                effect: "自分バトルカードのバトルセンスを自分・相手の墓地にあるバトルカードの数×500だけ上昇",
+
+                // ← 画像
+                image: "腐敗した戦士__18358611.jpg"
+            },
+
+            {
+                name: "墓穴採掘士",
+                type: "ウェポン",
+                battleType: "",
+                attribute: "",
+                effect: "自分のバトルカードのバトルセンスを-800する。",
+
+                // ← 画像
+                image: "墓穴採掘士__18358604.jpg"
+            },
+
+            {
+                name: "傍聴するグリネコ",
+                type: "バトル",
+                battleType: "M",
+                attribute: "陸",
+                battleSense: 1000,
+                effect: "このカードのバトルセンスはお互いのプレイヤーのバトルカードとUカードの効果が1枚以上発動していた場合+800される。",
+
+                // ← 画像
+                image: "傍聴するグリネコ__18358597.jpg"
+            },
+
+            {
+                name: "本気猫破無血",
+                type: "ウェポン",
+                battleType: "",
+                attribute: "",
+                effect: "自分バトルカードのバトルセンスの数値が変動した時に発動する。相手Uデッキの1番上のカードを墓地に送らせる。",
+
+                // ← 画像
+                image: "本気猫破無血__18358588.jpg"
+            },
+
+            {
+                name: "勿体無いグリネコ",
+                type: "バトル",
+                battleType: "M",
+                attribute: "陸",
+                battleSense: 500,
+                effect: "自分がセット終了宣言時に発動したUカードの効果をもう一度発動する。",
+
+                // ← 画像
+                image: "勿体無いグリネコ__18358594.jpg"
+            }
+
+
+        ];
+
+
+        // カードを表示する
+        function displayCards(cardData) {
+
+            const cardList =
+                document.getElementById("cardList");
+
+            // 一度画面を空にする
+            cardList.innerHTML = "";
+
+
+            // 検索結果がない場合
+            if (cardData.length === 0) {
+
+                cardList.innerHTML =
+                    "<p>該当するカードがありません。</p>";
+
+                return;
+            }
+
+
+            // カードを1枚ずつ表示
+            cardData.forEach(function(card) {
+
+                const cardElement =
+                    document.createElement("div");
+
+
+                // カード画像だけ表示する
+                cardElement.innerHTML = `
+                    <img
+                        src="${card.image}"
+                        width="250"
+                    >
+                `;
+
+
+                cardList.appendChild(cardElement);
+
+            });
+
+        }
+
+
+        // 検索
+        function searchCards() {
+
+            // カード名
+            const keyword =
+                document.getElementById("searchBox").value;
+
+
+            // 効果名
+            const effectKeyword =
+                document.getElementById("effectSearchBox").value;
+
+
+            // カード種類
+            const type =
+                document.getElementById("typeFilter").value;
+
+
+            // バトルタイプ
+            const battleType =
+                document.getElementById("battleTypeFilter").value;
+
+
+            // 属性
+            const attribute =
+                document.getElementById("attributeFilter").value;
+
+
+            // 条件に合うカードを探す
+            const results = cards.filter(function(card) {
+
+                // カード名
+                const nameMatch =
+                    card.name.includes(keyword);
+
+
+                // 効果名
+                const effectMatch =
+                    card.effect.includes(effectKeyword);
+
+
+                // カード種類
+                const typeMatch =
+                    type === "all" ||
+                    card.type === type;
+
+
+                // バトルタイプ
+                const battleTypeMatch =
+                    battleType === "all" ||
+                    card.battleType === battleType;
+
+
+                // 属性
+                const attributeMatch =
+                    attribute === "all" ||
+                    card.attribute === attribute;
+
+
+                // 全部の条件を満たしたカードだけ残す
+                return (
+                    nameMatch &&
+                    effectMatch &&
+                    typeMatch &&
+                    battleTypeMatch &&
+                    attributeMatch
+                );
+
+            });
+
+
+            // 結果を表示
+            displayCards(results);
+
+        }
+
+
+        // 最初は全部表示
+        displayCards(cards);
+
+    </script>
+
+</body>
+</html>
